@@ -1,0 +1,355 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Daily Rapido</title>
+
+<style>
+*{box-sizing:border-box;font-family:Segoe UI}
+body{margin:0;background:radial-gradient(circle,#050016,#000);color:#fff;overflow-x:hidden}
+
+/* HEADER */
+header{text-align:center;font-size:28px;padding:12px;color:#9ff;text-shadow:0 0 15px #0ff}
+
+/* WALLET */
+#wallet{text-align:center;font-size:18px;margin-bottom:6px}
+#wallet span{color:#0f0;font-weight:bold}
+
+/* GLASS BAR */
+.bar{display:flex;justify-content:space-around;padding:10px}
+.bar button{
+width:18%;padding:12px 6px;border-radius:18px;
+border:1px solid rgba(0,255,120,.6);
+background:linear-gradient(135deg,rgba(0,255,150,.25),rgba(0,120,80,.15));
+backdrop-filter:blur(10px);
+color:#baffd8;font-size:13px;font-weight:600;
+display:flex;flex-direction:column;align-items:center;gap:5px;
+cursor:pointer;box-shadow:0 0 12px rgba(0,255,120,.35)
+}
+.bar button span{font-size:22px}
+
+/* SPRING BALL */
+#springBall{
+width:230px;height:230px;margin:10px auto;border-radius:50%;
+background:radial-gradient(circle,#fff,#0ff,#044);
+display:flex;align-items:center;justify-content:center;
+box-shadow:0 0 30px #0ff
+}
+#springBall.drawing{
+background:radial-gradient(circle,#ff0000,#900,#300);
+animation:blink .8s infinite;
+box-shadow:0 0 40px red,0 0 80px red
+}
+@keyframes blink{50%{opacity:.4;transform:scale(1.05)}}
+#timer{font-size:38px;color:#000;font-weight:bold}
+
+/* WIN BALLS */
+#winBalls{
+display:grid;grid-template-columns:repeat(5,1fr);
+gap:10px;max-width:300px;margin:10px auto
+}
+.ball{
+width:50px;height:50px;border-radius:50%;
+border:2px solid #0ff;
+display:flex;align-items:center;justify-content:center;
+font-weight:bold;color:#0ff
+}
+.ball.final{background:#ff69b4;color:#000;box-shadow:0 0 15px pink}
+
+/* MODAL */
+.modal{
+position:fixed;inset:0;background:rgba(0,0,0,.85);
+display:none;justify-content:center;align-items:center;z-index:20
+}
+.panel{background:#111;padding:15px;border-radius:15px;width:95%;max-width:420px}
+.close{float:right;color:red;font-size:20px;cursor:pointer}
+
+/* BUY */
+.grid{display:grid;grid-template-columns:repeat(5,1fr);gap:8px}
+.num{
+padding:10px;border-radius:10px;
+background:linear-gradient(45deg,red,orange,yellow,green,cyan);
+color:#000;font-weight:bold;text-align:center;cursor:pointer
+}
+.num.sel{outline:3px solid #fff;background:#0ff}
+#selectedBox{margin:10px 0;padding:10px;border-radius:10px;background:#000;color:#0ff}
+.confirmBtn{
+width:100%;padding:15px;font-size:18px;border-radius:15px;
+background:linear-gradient(45deg,#00ff66,#009944);
+margin-top:10px;color:#000;font-weight:bold;cursor:pointer
+}
+
+/* LIST */
+.list{max-height:60vh;overflow:auto}
+.ticket{padding:10px;border-radius:10px;margin-bottom:8px;background:#fff;color:#000}
+.ticket.jackpot{background:#00ff99}
+.ticket.big{background:#66ff00}
+.ticket.small{background:#ff0}
+.ticket.try{background:#ffa500}
+.ticket.lose{background:#f00;color:#fff}
+.ticket.paid{background:#00ccff}
+
+.match{color:#ff69b4;font-weight:bold;text-shadow:0 0 10px pink}
+.historyTime{color:#00f;font-size:13px}
+
+/* NEON */
+#neonMsg{
+position:fixed;top:40%;left:50%;
+transform:translate(-50%,-50%);
+background:#000;padding:20px 30px;
+border-radius:20px;color:#0ff;
+box-shadow:0 0 25px #0ff;
+display:none;z-index:30
+}
+</style>
+</head>
+
+<body>
+
+<header>DAILY RAPIDO</header>
+<div id="wallet">💰 Wallet : <span id="money">1000</span> LKR</div>
+
+<div class="bar">
+<button onclick="openModal('coinModal')"><span>💳</span>Coins</button>
+<button onclick="openModal('buyModal')"><span>🎟️</span>Buy</button>
+<button onclick="openModal('ticketModal')"><span>🎫</span>Ticket</button>
+<button onclick="openModal('historyModal')"><span>📜</span>History</button>
+<button onclick="openModal('payoutModal')"><span>💰</span>Payout</button>
+</div>
+
+<div id="springBall"><div id="timer">60.00</div></div>
+<div id="winBalls"></div>
+<div id="neonMsg"></div>
+
+<!-- COINS -->
+<div class="modal" id="coinModal">
+<div class="panel">
+<span class="close" onclick="closeModal('coinModal')">❎</span>
+<h3>Demo Coins</h3>
+<input type="range" min="500" max="5000" step="500" id="coinRange" value="500" style="width:100%">
+<p>Amount: <span id="coinVal">500</span></p>
+<button class="confirmBtn" onclick="addCoins()">ADD 💸</button>
+<hr>
+<button class="confirmBtn" style="background:#0af" onclick="neon('💳 Card Payment Coming Soon')">
+💳 Card Payment
+</button>
+</div>
+</div>
+
+<!-- BUY -->
+<div class="modal" id="buyModal">
+<div class="panel">
+<span class="close" onclick="closeModal('buyModal')">❎</span>
+<h3>Select 10 Numbers</h3>
+<div id="selectedBox">Selected: none</div>
+<div class="grid" id="numGrid"></div>
+<button class="confirmBtn" onclick="buyTicket()">CONFIRM 🎟️</button>
+</div>
+</div>
+
+<!-- TICKET -->
+<div class="modal" id="ticketModal">
+<div class="panel">
+<span class="close" onclick="closeModal('ticketModal')">❎</span>
+<h3>My Tickets</h3>
+<div class="list" id="ticketList"></div>
+</div>
+</div>
+
+<!-- HISTORY -->
+<div class="modal" id="historyModal">
+<div class="panel">
+<span class="close" onclick="closeModal('historyModal')">❎</span>
+<h3>Winning History</h3>
+<div class="list" id="historyList"></div>
+</div>
+</div>
+
+<!-- PAYOUT -->
+<div class="modal" id="payoutModal">
+<div class="panel">
+<span class="close" onclick="closeModal('payoutModal')">❎</span>
+<h3>Payout</h3>
+<div class="list" id="payoutList"></div>
+</div>
+</div>
+
+<script>
+let wallet=1000,selected=[],tickets=[],history=[];
+let drawing=false,timeMs=60000;
+money.innerText=wallet;
+
+function neon(msg){
+neonMsg.innerText=msg;
+neonMsg.style.display="block";
+setTimeout(()=>neonMsg.style.display="none",2500);
+}
+
+/* NUMBERS */
+for(let i=1;i<=50;i++){
+let d=document.createElement("div");
+d.className="num";d.innerText=i;
+d.onclick=()=>{
+if(drawing)return;
+if(d.classList.toggle("sel"))selected.push(i);
+else selected=selected.filter(n=>n!==i);
+if(selected.length>10){
+d.classList.remove("sel");
+selected.pop();
+neon("⚠️ Only 10 numbers allowed");
+}
+selectedBox.innerText="Selected: "+(selected.join(", ")||"none");
+};
+numGrid.appendChild(d);
+}
+
+/* COINS */
+coinRange.oninput=()=>coinVal.innerText=coinRange.value;
+function addCoins(){
+wallet+=+coinRange.value;
+money.innerText=wallet;
+neon(`💸 Sent +${coinRange.value}`);
+}
+
+/* BUY */
+function buyTicket(){
+if(drawing)return neon("⏳ Drawing in progress");
+if(selected.length!==10)return neon("⚠️ Select exactly 10 numbers");
+if(wallet<100)return neon("💰 Insufficient balance");
+
+wallet-=100;money.innerText=wallet;
+tickets.push({nums:[...selected],status:"pending",time:new Date(),paid:false});
+selected=[];
+document.querySelectorAll(".num").forEach(n=>n.classList.remove("sel"));
+selectedBox.innerText="Selected: none";
+renderTickets();
+neon("🎟️ Ticket Sent Successfully");
+}
+
+/* BALLS */
+function resetBalls(){
+winBalls.innerHTML="";
+for(let i=0;i<10;i++){
+let b=document.createElement("div");
+b.className="ball";
+winBalls.appendChild(b);
+}}
+resetBalls();
+
+/* TIMER */
+setInterval(()=>{
+if(drawing)return;
+timeMs-=10;
+timer.innerText=(timeMs/1000).toFixed(2);
+if(timeMs<=0)startDraw();
+},10);
+
+/* DRAW */
+function startDraw(){
+drawing=true;
+springBall.classList.add("drawing");
+timer.innerText="DRAW";
+let balls=[...winBalls.children],win=[],i=0;
+function roll(){
+if(i===10){finish(win);return;}
+let b=balls[i];
+let r=setInterval(()=>b.innerText=Math.floor(Math.random()*50)+1,80);
+setTimeout(()=>{
+clearInterval(r);
+let n;do{n=Math.floor(Math.random()*50)+1}while(win.includes(n));
+win.push(n);
+b.innerText=n;b.classList.add("final");
+i++;roll();
+},1200);
+}
+roll();
+}
+
+function finish(win){
+springBall.classList.remove("drawing");
+history.push({nums:win,time:new Date()});
+tickets.forEach(t=>{
+if(t.status!=="pending")return;
+let m=t.nums.filter(n=>win.includes(n));
+t.match=m;
+t.status=m.length===10?"jackpot":m.length>=7?"big":m.length>=4?"small":m.length>=1?"try":"lose";
+});
+renderTickets();renderHistory();renderPayout();
+countdown();
+}
+
+function countdown(){
+let c=5;
+let cd=setInterval(()=>{
+timer.innerText=c;
+c--;
+if(c<0){
+clearInterval(cd);
+drawing=false;
+timeMs=60000;
+resetBalls();
+}
+},1000);
+}
+
+/* PAYOUT */
+function payoutValue(t){
+if(t.match.length===10)return 5000;
+if(t.match.length>=7)return 1000;
+if(t.match.length>=4)return 500;
+if(t.match.length>=1)return 200;
+return 0;
+}
+function renderPayout(){
+payoutList.innerHTML="";
+tickets.forEach((t,i)=>{
+if(t.paid||!t.match||t.match.length===0)return;
+payoutList.innerHTML+=`
+<div class="ticket">
+Match ${t.match.length} → ${payoutValue(t)} LKR
+<button onclick="claim(${i})">CLAIM</button>
+</div>`;
+});
+}
+function claim(i){
+let t=tickets[i];
+let amt=payoutValue(t);
+wallet+=amt;
+money.innerText=wallet;
+t.paid=true;
+t.status="paid";
+renderTickets();renderPayout();
+neon(`💰 Paid ${amt} LKR`);
+}
+
+/* RENDER */
+function renderTickets(){
+ticketList.innerHTML="";
+tickets.forEach(t=>{
+ticketList.innerHTML+=`
+<div class="ticket ${t.status}">
+${t.nums.map(n=>t.match?.includes(n)?`<span class="match">${n}</span>`:n).join(", ")}
+<br>Status: ${t.status.toUpperCase()}
+<br><span class="historyTime">${t.time.toLocaleString()}</span>
+</div>`;
+});
+}
+function renderHistory(){
+historyList.innerHTML="";
+history.forEach(h=>{
+historyList.innerHTML+=`
+<div class="ticket">
+🎯 ${h.nums.join(", ")}<br>
+<span class="historyTime">${h.time.toLocaleString()}</span>
+</div>`;
+});
+}
+
+/* MODALS */
+function openModal(id){document.getElementById(id).style.display="flex"}
+function closeModal(id){document.getElementById(id).style.display="none"}
+</script>
+
+</body>
+</html>
